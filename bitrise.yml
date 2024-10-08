@@ -160,9 +160,8 @@ stages:
       - run_tag_smoke_assets_android: {}
       - run_tag_smoke_confirmations_ios: {}
       - run_tag_smoke_confirmations_android: {}
-      - run_tag_smoke_ramps_android: {}
-      # - run_tag_smoke_swaps_ios: {}
-      # - run_tag_smoke_swaps_android: {}
+      - run_tag_smoke_swaps_ios: {}
+      - run_tag_smoke_swaps_android: {}
       - run_tag_smoke_core_ios: {}
       - run_tag_smoke_core_android: {}
       - run_tag_multichain_permissions_ios: {}
@@ -1247,13 +1246,13 @@ workflows:
             - content: |-
                 # Define the source path of the generated APK
                 SOURCE_APK_PATH="$PROJECT_LOCATION/app/build/outputs/apk/prod/debug/app-prod-debug.apk"
-                
+
                 # Define the destination path with the new name
                 DEST_APK_PATH="$BITRISE_DEPLOY_DIR/android-expo-dev-build.apk"
-                
+
                 # Copy and rename the APK
                 cp "$SOURCE_APK_PATH" "$DEST_APK_PATH"
-                
+
                 # Optionally, print the new path for verification
                 echo "APK has been copied and renamed to: $DEST_APK_PATH"
       - deploy-to-bitrise-io@2.2.3:
@@ -1537,13 +1536,13 @@ workflows:
             - content: |-
                 # Define the source path of the generated IPA
                 SOURCE_IPA_PATH="ios/build/output/MetaMask.ipa"
-                
+
                 # Define the destination path with the new name
                 DEST_IPA_PATH="$BITRISE_DEPLOY_DIR/ios-expo-dev-build.ipa"
-                
+
                 # Copy and rename the IPA
                 cp "$SOURCE_IPA_PATH" "$DEST_IPA_PATH"
-                
+
                 # Optionally, print the new path for verification
                 echo "IPA has been copied and renamed to: $DEST_IPA_PATH"
       - deploy-to-bitrise-io@2.2.3:
