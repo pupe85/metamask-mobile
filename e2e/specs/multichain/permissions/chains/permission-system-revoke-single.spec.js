@@ -9,6 +9,7 @@ import FixtureBuilder from '../../../../fixtures/fixture-builder';
 import { withFixtures } from '../../../../fixtures/fixture-helper';
 import { loginToApp } from '../../../../viewHelper';
 import Assertions from '../../../../utils/Assertions';
+import ToastModal from '../../../../pages/wallet/ToastModal';
 
 describe(SmokeMultiChainPermissions('Chain Permission Management'), () => {
   beforeAll(async () => {
@@ -34,6 +35,7 @@ describe(SmokeMultiChainPermissions('Chain Permission Management'), () => {
 
         // Step 2: Navigate to test dApp and open network settings
         await Browser.navigateToTestDApp();
+        await Assertions.checkIfNotVisible(ToastModal.container);
         await Browser.tapNetworkAvatarButtonOnBrowser();
 
         // Step 3: Navigate through permission management flow

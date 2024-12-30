@@ -17,6 +17,7 @@ import TabBarComponent from '../../../../pages/wallet/TabBarComponent';
 import NetworkNonPemittedBottomSheet from '../../../../pages/Network/NetworkNonPemittedBottomSheet';
 import ConnectedAccountsModal from '../../../../pages/Browser/ConnectedAccountsModal';
 import NetworkConnectMultiSelector from '../../../../pages/Browser/NetworkConnectMultiSelector';
+import ToastModal from '../../../../pages/wallet/ToastModal';
 
 const fixtureServer = new FixtureServer();
 const SEPOLIA = CustomNetworks.Sepolia.providerConfig.nickname;
@@ -60,7 +61,7 @@ describe(
           await TabBarComponent.tapBrowser();
           await TestHelpers.delay(3000);
           await Browser.navigateToTestDApp();
-          await TestHelpers.delay(3000);
+          await Assertions.checkIfNotVisible(ToastModal.container);
           await Assertions.checkIfVisible(
             NetworkNonPemittedBottomSheet.addThisNetworkTitle,
           );
@@ -126,6 +127,7 @@ describe(
           await TabBarComponent.tapBrowser();
           await TestHelpers.delay(3000);
           await Browser.navigateToTestDApp();
+          await Assertions.checkIfNotVisible(ToastModal.container);
           await NetworkNonPemittedBottomSheet.tapAddThisNetworkButton();
 
           // Verify the permission was added by checking that disconnecting both networks shows disconnect all button
@@ -168,7 +170,7 @@ describe(
           await TabBarComponent.tapBrowser();
           await TestHelpers.delay(3000); // Wait for the browser to load
           await Browser.navigateToTestDApp();
-          await TestHelpers.delay(3000); // Wait for the toast to disappear
+          await Assertions.checkIfNotVisible(ToastModal.container);
           await Assertions.checkIfVisible(
             NetworkNonPemittedBottomSheet.addThisNetworkTitle,
           );

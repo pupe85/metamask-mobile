@@ -15,6 +15,7 @@ import WalletView from '../../../../pages/wallet/WalletView';
 import NetworkEducationModal from '../../../../pages/Network/NetworkEducationModal';
 import PermissionSummaryBottomSheet from '../../../../pages/Browser/PermissionSummaryBottomSheet';
 import { NetworkNonPemittedBottomSheetSelectorsText } from '../../../../selectors/Network/NetworkNonPemittedBottomSheet.selectors';
+import ToastModal from '../../../../pages/wallet/ToastModal';
 
 describe(SmokeMultiChainPermissions('Chain Permission Management'), () => {
   beforeAll(async () => {
@@ -40,6 +41,8 @@ describe(SmokeMultiChainPermissions('Chain Permission Management'), () => {
         await Assertions.checkIfVisible(Browser.browserScreenID);
 
         await Browser.navigateToTestDApp();
+        await Assertions.checkIfNotVisible(ToastModal.container);
+
         await Browser.tapNetworkAvatarButtonOnBrowser();
 
         // Navigate to chain permissions
@@ -85,10 +88,7 @@ describe(SmokeMultiChainPermissions('Chain Permission Management'), () => {
         await TestHelpers.delay(3000);
         await Browser.navigateToTestDApp();
 
-        // adding delay,
-        // on artifact recording it shows the toast is stuck, and looks like tapNetworkAvatar is tapped but bottom sheet not coming up yet grey overlay usually behind the bottom sheet was showing, and recording stopped there, yet toast was stuck on screen for 15 seconds anduntil end of recording
-        await TestHelpers.delay(3000);
-
+        await Assertions.checkIfNotVisible(ToastModal.container);
         // Open network permissions menu
         await Browser.tapNetworkAvatarButtonOnBrowser();
         await ConnectedAccountsModal.tapManagePermissionsButton();

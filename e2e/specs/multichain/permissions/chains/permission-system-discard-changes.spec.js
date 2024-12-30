@@ -10,6 +10,7 @@ import { loginToApp } from '../../../../viewHelper';
 import Assertions from '../../../../utils/Assertions';
 import NetworkConnectMultiSelector from '../../../../pages/Browser/NetworkConnectMultiSelector';
 import NetworkNonPemittedBottomSheet from '../../../../pages/Network/NetworkNonPemittedBottomSheet';
+import ToastModal from '../../../../pages/wallet/ToastModal';
 
 describe(SmokeMultiChainPermissions('Chain Permission Management'), () => {
   beforeAll(async () => {
@@ -33,6 +34,8 @@ describe(SmokeMultiChainPermissions('Chain Permission Management'), () => {
         await Assertions.checkIfVisible(Browser.browserScreenID);
 
         await Browser.navigateToTestDApp();
+        await Assertions.checkIfNotVisible(ToastModal.container);
+
         await Browser.tapNetworkAvatarButtonOnBrowser();
 
         // Navigate to chain permissions and add Sepolia
