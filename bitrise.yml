@@ -1843,4 +1843,4 @@ trigger_map:
   - tag: 'v*.*.*-RC-*'
     pipeline: release_e2e_pipeline
   - push_branch: set-testDapp-as-browserhome-for-e2e
-    pipeline: multichain_e2e_pipeline
+    pipeline: pr_smoke_e2e_pipeline
