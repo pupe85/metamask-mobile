@@ -28,6 +28,7 @@ import { getGanachePort } from './fixtures/utils';
 import Assertions from './utils/Assertions';
 import { CustomNetworks } from './resources/networks.e2e';
 import ToastModal from './pages/wallet/ToastModal';
+import { DEFAULT_FIXTURE_ACCOUNT } from './fixtures/fixture-builder';
 
 const LOCALHOST_URL = `http://localhost:${getGanachePort()}/`;
 const validAccount = Accounts.getValidAccount();
@@ -220,4 +221,45 @@ export const loginToApp = async () => {
   const PASSWORD = '123123123';
   await Assertions.checkIfVisible(LoginView.container);
   await LoginView.enterPassword(PASSWORD);
+};
+
+export const RESPONSE_STANDARD_MOCK = {
+  hash: '0x123456',
+  timestamp: new Date().toISOString(),
+  chainId: 1,
+  blockNumber: 1,
+  blockHash: '0x2',
+  gas: 1,
+  gasUsed: 1,
+  gasPrice: '1',
+  effectiveGasPrice: '1',
+  nonce: 1,
+  cumulativeGasUsed: 1,
+  methodId: null,
+  value: '1230000000000000000',
+  to: DEFAULT_FIXTURE_ACCOUNT.toLowerCase(),
+  from: '0x2',
+  isError: false,
+  valueTransfers: [],
+};
+
+export const RESPONSE_STANDARD_2_MOCK = {
+  ...RESPONSE_STANDARD_MOCK,
+  timestamp: new Date().toISOString(),
+  hash: '0x2',
+  value: '2340000000000000000',
+};
+
+export const mockAccountsApi = (transactions) => {
+  return {
+    urlEndpoint: `https://accounts.api.cx.metamask.io/v1/accounts/${DEFAULT_FIXTURE_ACCOUNT}/transactions?networks=0x1&sortDirection=ASC`,
+    response: {
+      data: transactions ?? [RESPONSE_STANDARD_MOCK, RESPONSE_STANDARD_2_MOCK],
+      pageInfo: {
+        count: 2,
+        hasNextPage: false,
+      },
+    },
+    responseCode: 200,
+  };
 };
