@@ -285,8 +285,8 @@ const NetworkSelector = () => {
         );
       } else {
         const { networkClientId } = rpcEndpoints[defaultRpcEndpointIndex];
-
-        await NetworkController.setActiveNetwork(networkClientId);
+        NetworkController.setActiveNetwork(networkClientId);
+        sheetRef.current?.dismissModal();
       }
 
       setTokenNetworkFilter(chainId);
@@ -414,10 +414,7 @@ const NetworkSelector = () => {
       NetworkController.setActiveNetwork(clientId);
       closeRpcModal();
       AccountTrackerController.refresh();
-
-      setTimeout(async () => {
-        await updateIncomingTransactions([networkConfiguration.chainId]);
-      }, 1000);
+      updateIncomingTransactions([networkConfiguration.chainId]);
     }
 
     sheetRef.current?.dismissModal();
@@ -635,7 +632,9 @@ const NetworkSelector = () => {
               size: AvatarSize.Sm,
             }}
             isSelected={Boolean(chainId === selectedChainId)}
-            onPress={() => onSetRpcTarget(networkConfiguration)}
+            onPress={() => {
+              onSetRpcTarget(networkConfiguration);
+            }}
             style={styles.networkCell}
             buttonIcon={IconName.MoreVertical}
             secondaryText={
