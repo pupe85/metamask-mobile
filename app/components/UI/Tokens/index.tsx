@@ -144,48 +144,52 @@ const Tokens: React.FC<TokensI> = ({ tokens }) => {
 
   const styles = createStyles(colors);
 
+  const stableSelectedAccountTokensChains = useMemo(
+    () => selectedAccountTokensChains,
+    [selectedAccountTokensChains],
+  );
+
+  const stableTokenNetworkFilter = useMemo(
+    () => tokenNetworkFilter,
+    [tokenNetworkFilter],
+  );
+
   const tokensList = useMemo((): TokenI[] => {
-    // if it is not popular network, display tokens only for current network
+    // Determine the network filter parameters
     const filteredAssetsParam = isPopularNetwork
-      ? tokenNetworkFilter
+      ? stableTokenNetworkFilter
       : { [currentChainId]: true };
+
     if (isPortfolioViewEnabled()) {
       // MultiChain implementation
       const allTokens = Object.values(
-        selectedAccountTokensChains,
+        stableSelectedAccountTokensChains,
       ).flat() as TokenI[];
-      /*
-        If hideZeroBalanceTokens is ON and user is on "all Networks" we respect the setting and filter native and ERC20 tokens when zero
-        If user is on "current Network" we want to show native tokens, even with zero balance
-      */
-      let tokensToDisplay = [];
+
+      // Use a Set to eliminate duplicates
+      const tokenSet = new Set<TokenI>(allTokens);
+
+      // Filter tokens based on hideZeroBalanceTokens and current network
+      let tokensToDisplay: TokenI[];
       if (hideZeroBalanceTokens) {
-        if (isUserOnCurrentNetwork) {
-          tokensToDisplay = allTokens.filter((curToken) => {
-            const multiChainTokenBalances =
-              multiChainTokenBalance?.[selectedInternalAccountAddress as Hex]?.[
-                curToken.chainId as Hex
-              ];
-            const balance = multiChainTokenBalances?.[curToken.address as Hex];
+        const accountBalances =
+          multiChainTokenBalance?.[selectedInternalAccountAddress as Hex] || {};
+        tokensToDisplay = Array.from(tokenSet).filter((curToken) => {
+          const chainId = curToken.chainId as Hex;
+          const tokensBalances = accountBalances[chainId] || {};
+          const balance =
+            tokensBalances[curToken.address as Hex] || curToken.balance;
+
+          if (isUserOnCurrentNetwork) {
             return !isZero(balance) || curToken.isNative || curToken.isStaked;
-          });
-        } else {
-          tokensToDisplay = allTokens.filter((curToken) => {
-            const multiChainTokenBalances =
-              multiChainTokenBalance?.[selectedInternalAccountAddress as Hex]?.[
-                curToken.chainId as Hex
-              ];
-            const balance =
-              multiChainTokenBalances?.[curToken.address as Hex] ||
-              curToken.balance;
-            return !isZero(balance) || curToken.isStaked;
-          });
-        }
+          }
+          return !isZero(balance) || curToken.isStaked;
+        });
       } else {
-        tokensToDisplay = allTokens;
+        tokensToDisplay = Array.from(tokenSet);
       }
 
-      // Then apply network filters
+      // Apply network filters
       const filteredAssets = filterAssets(tokensToDisplay, [
         {
           key: 'chainId',
@@ -194,65 +198,53 @@ const Tokens: React.FC<TokensI> = ({ tokens }) => {
         },
       ]);
 
-      const { nativeTokens, nonNativeTokens } = filteredAssets.reduce<{
-        nativeTokens: TokenI[];
-        nonNativeTokens: TokenI[];
-      }>(
-        (
-          acc: { nativeTokens: TokenI[]; nonNativeTokens: TokenI[] },
-          currToken: unknown,
-        ) => {
-          if (
-            isTestNet((currToken as TokenI & { chainId: string }).chainId) &&
-            !isTestNet(currentChainId)
-          ) {
-            return acc;
-          }
-          if ((currToken as TokenI).isNative) {
-            acc.nativeTokens.push(currToken as TokenI);
-          } else {
-            acc.nonNativeTokens.push(currToken as TokenI);
-          }
-          return acc;
-        },
-        { nativeTokens: [], nonNativeTokens: [] },
-      );
-
-      const assets = [...nativeTokens, ...nonNativeTokens];
-
-      // Calculate fiat balances for tokens
-      const tokenFiatBalances = assets.map((token) => {
+      // Combine native and non-native tokens in a single loop
+      const assets: TokenI[] = [];
+      for (const token of filteredAssets) {
         const chainId = token.chainId as Hex;
-        const multiChainExchangeRates = multiChainMarketData?.[chainId];
+
+        // Skip testnet tokens if on mainnet
+        if (isTestNet(chainId) && !isTestNet(currentChainId)) {
+          continue;
+        }
+
+        assets.push(token);
+      }
+
+      // Calculate fiat balances and sort tokens
+      const tokensWithBalances = assets.map((token) => {
+        const chainId = token.chainId as Hex;
+        const multiChainExchangeRates = multiChainMarketData?.[chainId] || {};
         const multiChainTokenBalances =
           multiChainTokenBalance?.[selectedInternalAccountAddress as Hex]?.[
             chainId
-          ];
+          ] || {};
         const nativeCurrency =
-          networkConfigurationsByChainId[chainId].nativeCurrency;
+          networkConfigurationsByChainId[chainId]?.nativeCurrency || '';
         const multiChainConversionRate =
           multiChainCurrencyRates?.[nativeCurrency]?.conversionRate || 0;
+        const balanceFiatAmount =
+          token.isETH || token.isNative
+            ? parseFloat(token.balance) * multiChainConversionRate
+            : deriveBalanceFromAssetMarketDetails(
+                token,
+                multiChainExchangeRates,
+                multiChainTokenBalances,
+                multiChainConversionRate,
+                currentCurrency || '',
+              ).balanceFiatCalculation;
 
-        return token.isETH || token.isNative
-          ? parseFloat(token.balance) * multiChainConversionRate
-          : deriveBalanceFromAssetMarketDetails(
-              token,
-              multiChainExchangeRates || {},
-              multiChainTokenBalances || {},
-              multiChainConversionRate || 0,
-              currentCurrency || '',
-            ).balanceFiatCalculation;
+        return {
+          ...token,
+          tokenFiatAmount: balanceFiatAmount,
+        };
       });
 
-      const tokensWithBalances = assets.map((token, i) => ({
-        ...token,
-        tokenFiatAmount: tokenFiatBalances[i],
-      }));
-
+      // Sort the tokens based on tokenSortConfig
       return sortAssets(tokensWithBalances, tokenSortConfig);
     }
-    // Previous implementation
-    // Filter tokens based on hideZeroBalanceTokens flag
+
+    // Previous implementation for single chain
     const tokensToDisplay = hideZeroBalanceTokens
       ? tokens.filter(
           ({ address, isETH }) => !isZero(tokenBalances[address]) || isETH,
@@ -260,28 +252,22 @@ const Tokens: React.FC<TokensI> = ({ tokens }) => {
       : tokens;
 
     // Calculate fiat balances for tokens
-    const tokenFiatBalances = conversionRate
-      ? tokensToDisplay.map((asset) =>
-          asset.isETH
-            ? parseFloat(asset.balance) * conversionRate
-            : deriveBalanceFromAssetMarketDetails(
-                asset,
-                tokenExchangeRates || {},
-                tokenBalances || {},
-                conversionRate || 0,
-                currentCurrency || '',
-              ).balanceFiatCalculation,
-        )
-      : [];
+    const tokensWithBalances = tokensToDisplay.map((asset) => {
+      const balanceFiatAmount = asset.isETH
+        ? parseFloat(asset.balance) * (conversionRate || 0)
+        : deriveBalanceFromAssetMarketDetails(
+            asset,
+            tokenExchangeRates || {},
+            tokenBalances || {},
+            conversionRate || 0,
+            currentCurrency || '',
+          ).balanceFiatCalculation;
 
-    // Combine tokens with their fiat balances
-    // tokenFiatAmount is the key in PreferencesController to sort by when sorting by declining fiat balance
-    // this key in the controller is also used by extension, so this is for consistency in syntax and config
-    // actual balance rendering for each token list item happens in TokenListItem component
-    const tokensWithBalances = tokensToDisplay.map((token, i) => ({
-      ...token,
-      tokenFiatAmount: tokenFiatBalances[i],
-    }));
+      return {
+        ...asset,
+        tokenFiatAmount: balanceFiatAmount,
+      };
+    });
 
     // Sort the tokens based on tokenSortConfig
     return sortAssets(tokensWithBalances, tokenSortConfig);
@@ -294,9 +280,9 @@ const Tokens: React.FC<TokensI> = ({ tokens }) => {
     tokenSortConfig,
     tokens,
     // Dependencies for multichain implementation
-    selectedAccountTokensChains,
+    stableSelectedAccountTokensChains,
     isPopularNetwork,
-    tokenNetworkFilter,
+    stableTokenNetworkFilter,
     currentChainId,
     multiChainCurrencyRates,
     multiChainMarketData,
@@ -497,4 +483,4 @@ const Tokens: React.FC<TokensI> = ({ tokens }) => {
   );
 };
 
-export default Tokens;
+export default React.memo(Tokens);
