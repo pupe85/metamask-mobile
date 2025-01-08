@@ -55,6 +55,7 @@ describe(SmokeMultiChainPermissions('Chain Permission Management'), () => {
 
         // Update permissions
         await NetworkConnectMultiSelector.tapUpdateButton();
+        await Assertions.checkIfNotVisible(ToastModal.container);
 
         // Verify changes were saved by checking chain permissions again
         await ConnectedAccountsModal.tapNavigateToEditNetworksPermissionsButton();
