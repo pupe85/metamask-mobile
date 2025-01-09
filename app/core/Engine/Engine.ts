@@ -213,6 +213,7 @@ import {
   getGlobalChainId,
   getGlobalNetworkClientId,
 } from '../../util/networks/global-network';
+import { RemoteFeatureFlagControllerMessenger } from '@metamask/remote-feature-flag-controller';
 
 const NON_EMPTY = 'NON_EMPTY';
 
@@ -502,21 +503,21 @@ export class Engine {
         'https://gas.api.cx.metamask.io/networks/<chain_id>/suggestedGasFees',
     });
 
-    const getMetaMetricsId = () => {
-      // MetaMetrics.getInstance().getMetaMetricsId()
-      return 'uid';
 
-    };
+    // TODO: fix types
+    // RemoteFeatureFlagControllerMessenger = RestrictedControllerMessenger<"RemoteFeatureFlagController", RemoteFeatureFlagControllerGetStateAction, RemoteFeatureFlagControllerStateChangeEvent, never, never>
+    // Property '#private' in type 'RestrictedControllerMessenger' refers to a different member that cannot be accessed from within type 'RestrictedMessenger'.
+    const featureFlagMessenger: RemoteFeatureFlagControllerMessenger = this.controllerMessenger.getRestricted({
+      name: 'RemoteFeatureFlagController',
+      allowedActions: [],
+      allowedEvents: [],
+    });
 
     const remoteFeatureFlagController = createRemoteFeatureFlagController({
       state: initialState.RemoteFeatureFlagController,
-      messenger: this.controllerMessenger.getRestricted({
-        name: 'RemoteFeatureFlagController',
-        allowedActions: [],
-        allowedEvents: [],
-      }),
+      messenger: featureFlagMessenger,
       disabled: !isBasicFunctionalityToggleEnabled(),
-      getMetaMetricsId,
+      getMetaMetricsId: () => MetaMetrics.getInstance().getMetaMetricsId(),
     });
 
     const phishingController = new PhishingController({

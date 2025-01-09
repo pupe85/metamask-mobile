@@ -26,7 +26,7 @@ import { MMKV } from 'react-native-mmkv';
  */
 class StorageWrapper {
   private static instance: StorageWrapper | null = null;
-  private storage: typeof ReadOnlyNetworkStore | MMKV;
+  private storage: MMKV;
 
   /**
    * Private constructor to enforce singleton pattern.
@@ -37,7 +37,7 @@ class StorageWrapper {
      * The underlying storage implementation.
      * Use `ReadOnlyNetworkStore` in test mode otherwise use `AsyncStorage`.
      */
-    this.storage = isE2E ? ReadOnlyNetworkStore : new MMKV();
+    this.storage = new MMKV();
   }
 
   /**
@@ -54,19 +54,14 @@ class StorageWrapper {
    *   console.log('No value found for key: my_key');
    * }
    */
-  async getItem(key: string) {
+  getItem(key: string) {
     try {
       // asyncStorage returns null for no value
       // mmkv returns undefined for no value
       // therefore must return null if no value is found
       // to keep app behavior consistent
-      const value = (await this.storage.getString(key)) ?? null;
-      return value;
+      return this.storage.getString(key);
     } catch (error) {
-      if (isE2E) {
-        // Fall back to AsyncStorage in test mode if ReadOnlyNetworkStore fails
-        return await AsyncStorage.getItem(key);
-      }
       throw error;
     }
   }
@@ -85,18 +80,14 @@ class StorageWrapper {
    *   console.error('Failed to save user preferences:', error);
    * }
    */
-  async setItem(key: string, value: string) {
+  setItem(key: string, value: string) {
     try {
       if (typeof value !== 'string')
         throw new Error(
           `MMKV value must be a string, received value ${value} for key ${key}`,
         );
-      return await this.storage.set(key, value);
+      return this.storage.set(key, value);
     } catch (error) {
-      if (isE2E) {
-        // Fall back to AsyncStorage in test mode if ReadOnlyNetworkStore fails
-        return await AsyncStorage.setItem(key, value);
-      }
       throw error;
     }
   }
@@ -114,14 +105,10 @@ class StorageWrapper {
    *   console.error('Failed to remove temporary data:', error);
    * }
    */
-  async removeItem(key: string) {
+  removeItem(key: string) {
     try {
-      return await this.storage.delete(key);
+      return this.storage.delete(key);
     } catch (error) {
-      if (isE2E) {
-        // Fall back to AsyncStorage in test mode if ReadOnlyNetworkStore fails
-        return await AsyncStorage.removeItem(key);
-      }
       throw error;
     }
   }
@@ -139,8 +126,8 @@ class StorageWrapper {
    *   console.error('Failed to clear storage data:', error);
    * }
    */
-  async clearAll() {
-    await this.storage.clearAll();
+  clearAll() {
+    this.storage.clearAll();
   }
 
   /**

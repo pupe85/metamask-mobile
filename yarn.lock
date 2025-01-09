@@ -4452,6 +4452,14 @@
     "@metamask/utils" "^10.0.0"
     immer "^9.0.6"
 
+"@metamask/base-controller@^7.1.0":
+  version "7.1.0"
+  resolved "https://registry.yarnpkg.com/@metamask/base-controller/-/base-controller-7.1.0.tgz#b0dba552cb72a27fb5ac0b801458006a4ab04c42"
+  integrity sha512-qUZXuyjy51o73QpkfgwvFiyahi0MRE0u33DGnC6eS34eww7JWwzwA+jbPFSWYj2nVGlR/ZQ1uZR7r1yCxcpzvg==
+  dependencies:
+    "@metamask/utils" "^10.0.0"
+    immer "^9.0.6"
+
 "@metamask/bitcoin-wallet-snap@^0.8.2":
   version "0.8.2"
   resolved "https://registry.yarnpkg.com/@metamask/bitcoin-wallet-snap/-/bitcoin-wallet-snap-0.8.2.tgz#dd37c48366997e6e9927837e28cc65a6008d1524"
@@ -5137,7 +5145,7 @@
     escape-string-regexp "^4.0.0"
     invariant "2.2.4"
 
-"@metamask/remote-feature-flag-controller@link:../../core/feature-flags/packages/remote-feature-flag-controller":
+"@metamask/remote-feature-flag-controller@link:../../core/main/packages/remote-feature-flag-controller":
   version "0.0.0"
   uid ""
 
@@ -5410,7 +5418,7 @@
     lodash "^4.17.21"
     uuid "^8.3.2"
 
-"@metamask/utils@^10.0.0", "@metamask/utils@^10.0.1", "@metamask/utils@^8.2.0", "@metamask/utils@^8.3.0", "@metamask/utils@^9.0.0", "@metamask/utils@^9.1.0", "@metamask/utils@^9.2.1":
+"@metamask/utils@^10.0.0", "@metamask/utils@^10.0.1", "@metamask/utils@^11.0.1", "@metamask/utils@^8.2.0", "@metamask/utils@^8.3.0", "@metamask/utils@^9.0.0", "@metamask/utils@^9.1.0", "@metamask/utils@^9.2.1":
   version "10.0.1"
   resolved "https://registry.yarnpkg.com/@metamask/utils/-/utils-10.0.1.tgz#a765f96c20e35fc51c068fb9f88a3332b40b215e"
   integrity sha512-zHgAitJtRwviVVFnRUA2PLRMaAwatr3jiHgiH7mPicJaeSK4ma01aGR4fHy0iy5tlVo1ZiioTmJ1Hbp8FZ6pSg==

@@ -111,6 +111,9 @@ class MetaMetrics implements IMetaMetrics {
    */
   protected constructor(segmentClient: ISegmentClient) {
     this.segmentClient = segmentClient;
+    // init metametrics regardless of what is stored on the device.
+    // fetch it later
+    this.metametricsId = uuidv4();
   }
 
   /**
@@ -144,7 +147,7 @@ class MetaMetrics implements IMetaMetrics {
    * It's generated when the user enables MetaMetrics for the first time
    * @private
    */
-  private metametricsId: string | undefined;
+  private metametricsId: string;
 
   /**
    * Indicate if MetaMetrics is enabled or disabled
@@ -184,8 +187,8 @@ class MetaMetrics implements IMetaMetrics {
    * @private
    * @returns Promise containing the enabled state
    */
-  #isMetaMetricsEnabled = async (): Promise<boolean> => {
-    const enabledPref = await StorageWrapper.getItem(METRICS_OPT_IN);
+  #isMetaMetricsEnabled = () => {
+    const enabledPref = StorageWrapper.getItem(METRICS_OPT_IN);
     this.enabled = AGREED === enabledPref;
     if (__DEV__)
       Logger.log(`Current MetaMatrics enable state: ${this.enabled}`);
@@ -196,22 +199,22 @@ class MetaMetrics implements IMetaMetrics {
    * Retrieve the analytics recording status from the preference
    * @private
    */
-  #getIsDataRecordedFromPrefs = async (): Promise<boolean> =>
-    (await StorageWrapper.getItem(ANALYTICS_DATA_RECORDED)) === 'true';
+  #getIsDataRecordedFromPrefs = () =>
+    StorageWrapper.getItem(ANALYTICS_DATA_RECORDED) === 'true';
 
   /**
    * Retrieve the analytics deletion request date from the preference
    * @private
    */
-  #getDeleteRegulationDateFromPrefs = async (): Promise<string> =>
-    await StorageWrapper.getItem(ANALYTICS_DATA_DELETION_DATE);
+  #getDeleteRegulationDateFromPrefs = () =>
+    StorageWrapper.getItem(ANALYTICS_DATA_DELETION_DATE);
 
   /**
    * Retrieve the analytics deletion regulation ID from the preference
    * @private
    */
-  #getDeleteRegulationIdFromPrefs = async (): Promise<string> =>
-    await StorageWrapper.getItem(METAMETRICS_DELETION_REGULATION_ID);
+  #getDeleteRegulationIdFromPrefs = () =>
+    StorageWrapper.getItem(METAMETRICS_DELETION_REGULATION_ID);
 
   /**
    * Persist the analytics recording status
@@ -220,7 +223,7 @@ class MetaMetrics implements IMetaMetrics {
    */
   #setIsDataRecorded = async (isDataRecorded = false): Promise<void> => {
     this.dataRecorded = isDataRecorded;
-    await StorageWrapper.setItem(
+    StorageWrapper.setItem(
       ANALYTICS_DATA_RECORDED,
       String(isDataRecorded),
     );
@@ -236,7 +239,7 @@ class MetaMetrics implements IMetaMetrics {
     deleteRegulationId: string,
   ): Promise<void> => {
     this.deleteRegulationId = deleteRegulationId;
-    await StorageWrapper.setItem(
+    StorageWrapper.setItem(
       METAMETRICS_DELETION_REGULATION_ID,
       deleteRegulationId,
     );
@@ -257,7 +260,7 @@ class MetaMetrics implements IMetaMetrics {
     this.deleteRegulationDate = deletionDate;
 
     // similar to the one used in the legacy Analytics
-    await StorageWrapper.setItem(ANALYTICS_DATA_DELETION_DATE, deletionDate);
+    StorageWrapper.setItem(ANALYTICS_DATA_DELETION_DATE, deletionDate);
   };
 
   /**
@@ -267,27 +270,26 @@ class MetaMetrics implements IMetaMetrics {
    *
    * @returns Promise containing the user ID
    */
-  #getMetaMetricsId = async (): Promise<string> => {
+  #getMetaMetricsId = (): string => {
     // Important: this ID is used to identify the user in Segment and should be kept in
     // preferences: no reset unless explicitelu asked for.
     // If user later enables MetaMetrics,
     // this same ID should be retrieved from preferences and reused.
     // look for a legacy ID from MixPanel integration and use it
-    const legacyId = await StorageWrapper.getItem(MIXPANEL_METAMETRICS_ID);
+    const legacyId = StorageWrapper.getItem(MIXPANEL_METAMETRICS_ID);
     if (legacyId) {
       this.metametricsId = legacyId;
-      await StorageWrapper.setItem(METAMETRICS_ID, legacyId);
+      StorageWrapper.setItem(METAMETRICS_ID, legacyId);
       return legacyId;
     }
 
     // look for a new Metametics ID and use it or generate a new one
-    const metametricsId: string | undefined = await StorageWrapper.getItem(
+    const metametricsId = StorageWrapper.getItem(
       METAMETRICS_ID,
     );
     if (!metametricsId) {
-      // keep the id format compatible with MixPanel but base it on a UUIDv4
-      this.metametricsId = uuidv4();
-      await StorageWrapper.setItem(METAMETRICS_ID, this.metametricsId);
+      // No metaMetrics found on device storage, use the init value and store it;
+      StorageWrapper.setItem(METAMETRICS_ID, this.metametricsId);
     } else {
       this.metametricsId = metametricsId;
     }
@@ -297,10 +299,10 @@ class MetaMetrics implements IMetaMetrics {
   /**
    * Reset the analytics user ID and Segment SDK state
    */
-  #resetMetaMetricsId = async (): Promise<void> => {
+  #resetMetaMetricsId = () => {
     try {
-      await StorageWrapper.setItem(METAMETRICS_ID, '');
-      this.metametricsId = await this.#getMetaMetricsId();
+      StorageWrapper.setItem(METAMETRICS_ID, '');
+      this.metametricsId = this.#getMetaMetricsId();
       // TODO: Replace "any" with type
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -543,7 +545,7 @@ class MetaMetrics implements IMetaMetrics {
     try {
       this.enabled = await this.#isMetaMetricsEnabled();
       // get the user unique id when initializing
-      this.metametricsId = await this.#getMetaMetricsId();
+      this.metametricsId = this.#getMetaMetricsId();
       this.deleteRegulationId = await this.#getDeleteRegulationIdFromPrefs();
       this.deleteRegulationDate =
         await this.#getDeleteRegulationDateFromPrefs();

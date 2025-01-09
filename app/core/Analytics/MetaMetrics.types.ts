@@ -77,7 +77,7 @@ export interface IMetaMetrics {
 
   configure(): Promise<boolean>;
 
-  getMetaMetricsId(): Promise<string | undefined>;
+  getMetaMetricsId(): string;
 }
 
 /**
