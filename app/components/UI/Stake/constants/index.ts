@@ -1,6 +1,5 @@
 /* eslint-disable import/prefer-default-export */
-export const isPooledStakingFeatureEnabled = () =>
-  process.env.MM_POOLED_STAKING_UI_ENABLED === 'true';
+export const isPooledStakingFeatureEnabled = () => true;
 
 export const isStablecoinLendingFeatureEnabled = () =>
   process.env.MM_STABLECOIN_LENDING_UI_ENABLED === 'true';
