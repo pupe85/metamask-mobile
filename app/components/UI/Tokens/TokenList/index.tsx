@@ -94,6 +94,8 @@ export const TokenList = ({
     ],
   );
 
+  console.log('TOKEN_LIST_ITEM .........', renderItem);
+
   return tokens?.length > 0 ? (
     <FlashList
       testID={WalletViewSelectorsIDs.TOKENS_CONTAINER_LIST}
