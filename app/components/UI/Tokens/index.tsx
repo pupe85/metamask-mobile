@@ -145,6 +145,7 @@ const Tokens: React.FC<TokensI> = ({ tokens }) => {
   const styles = createStyles(colors);
 
   const tokensList = useMemo((): TokenI[] => {
+    console.log('FIRST_TOKEN_LIST .........');
     // Determine the network filter parameters
     const filteredAssetsParam = isPopularNetwork
       ? tokenNetworkFilter
@@ -235,6 +236,8 @@ const Tokens: React.FC<TokensI> = ({ tokens }) => {
           tokenFiatAmount: balanceFiatAmount,
         };
       });
+
+      console.log('END_TOKEN_LIST .........', conversionRate);
 
       // Sort the tokens based on tokenSortConfig
       return sortAssets(tokensWithBalances, tokenSortConfig);

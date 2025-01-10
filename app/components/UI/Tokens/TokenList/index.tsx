@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { View, FlatList, RefreshControl } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { View, RefreshControl, FlatList } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import BigList from 'react-native-big-list';
+// import { FlashList } from '@shopify/flash-list';
 import {
   useMetrics,
   MetaMetricsEvents,
@@ -75,41 +77,108 @@ export const TokenList = ({
     );
     setIsAddTokenEnabled(true);
   };
+  const renderItem = useCallback(
+    ({ item }) => (
+      <TokenListItem
+        asset={item}
+        showRemoveMenu={showRemoveMenu}
+        showScamWarningModal={showScamWarningModal}
+        setShowScamWarningModal={setShowScamWarningModal}
+        privacyMode={privacyMode}
+      />
+    ),
+    [
+      showScamWarningModal,
+      privacyMode,
+      showRemoveMenu,
+      setShowScamWarningModal,
+    ],
+  );
 
-  return tokens?.length ? (
-    <FlatList
-      testID={WalletViewSelectorsIDs.TOKENS_CONTAINER_LIST}
-      data={tokens}
-      renderItem={({ item }) => (
-        <TokenListItem
-          asset={item}
-          showRemoveMenu={showRemoveMenu}
-          showScamWarningModal={showScamWarningModal}
-          setShowScamWarningModal={setShowScamWarningModal}
-          privacyMode={privacyMode}
-        />
-      )}
-      keyExtractor={(_, index) => index.toString()}
-      ListFooterComponent={
-        <TokenListFooter
-          tokens={tokens}
-          goToAddToken={goToAddToken}
-          showDetectedTokens={showDetectedTokens}
-          isAddTokenEnabled={isAddTokenEnabled}
-        />
-      }
-      refreshControl={
-        <RefreshControl
-          colors={[colors.primary.default]}
-          tintColor={colors.icon.default}
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-        />
-      }
+  // Data array
+  const data = [
+    { label: '1', value: 1 /* ... */ },
+    { label: '2', value: 2 /* ... */ },
+    { label: '3', value: 3 /* ... */ },
+    { label: '4', value: 4 /* ... */ },
+    { label: '5', value: 5 /* ... */ },
+    /* ... */
+  ];
+
+  // const DATA = [
+  //   {
+  //     title: 'First Item',
+  //   },
+  //   {
+  //     title: 'Second Item',
+  //   },
+  // ];
+
+  // return (
+  //   <FlashList
+  //     data={DATA}
+  //     renderItem={({ item }) => <Text>{item.title}</Text>}
+  //     estimatedItemSize={200}
+  //   />
+  // );
+
+  // console.log('FlashList', FlashList);
+
+  // return tokens?.length > 0 ? (
+  //   <FlashList
+  //     testID={WalletViewSelectorsIDs.TOKENS_CONTAINER_LIST}
+  //     data={tokens}
+  //     // estimatedItemSize={50}
+  //     renderItem={renderItem}
+  //     keyExtractor={(_, index) => index.toString()}
+  //     // keyExtractor={(item) => item.address}
+  //     ListFooterComponent={
+  //       <TokenListFooter
+  //         tokens={tokens}
+  //         goToAddToken={goToAddToken}
+  //         showDetectedTokens={showDetectedTokens}
+  //         isAddTokenEnabled={isAddTokenEnabled}
+  //       />
+  //     }
+  //     refreshControl={
+  //       <RefreshControl
+  //         colors={[colors.primary.default]}
+  //         tintColor={colors.icon.default}
+  //         refreshing={refreshing}
+  //         onRefresh={onRefresh}
+  //       />
+  //     }
+  //   />
+  // ) : (
+  //   <View style={styles.emptyView}>
+  //     <Text style={styles.text}>{strings('wallet.no_tokens')}</Text>
+  //   </View>
+  // );
+
+  // Data array
+  const data2 = [
+    { label: '1', value: 1 /* ... */ },
+    { label: '2', value: 2 /* ... */ },
+    { label: '3', value: 3 /* ... */ },
+    { label: '4', value: 4 /* ... */ },
+    { label: '5', value: 5 /* ... */ },
+    /* ... */
+  ];
+
+  return (
+    <BigList
+      data={data2}
+      // Item
+      itemHeight={50} // Item height
+      renderItem={renderItem}
+      // Empty (optional)
+      // renderEmpty={null}
+      // Header (optional)
+      headerHeight={90} // Header height
+      renderHeader={null}
+      // Footer (optional)
+      footerHeight={100} // Header footer
+      renderFooter={null}
     />
-  ) : (
-    <View style={styles.emptyView}>
-      <Text style={styles.text}>{strings('wallet.no_tokens')}</Text>
-    </View>
   );
 };
