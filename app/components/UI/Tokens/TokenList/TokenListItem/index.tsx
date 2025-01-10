@@ -364,8 +364,4 @@ export const TokenListItem = React.memo(
       </AssetElement>
     );
   },
-  // (prevProps, nextProps) => prevProps.asset !== nextProps.asset,
-  // &&
-  // prevProps.showScamWarningModal === nextProps.showScamWarningModal &&
-  // prevProps.privacyMode === nextProps.privacyMode
 );
