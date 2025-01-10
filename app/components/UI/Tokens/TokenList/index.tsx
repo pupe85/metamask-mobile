@@ -100,8 +100,7 @@ export const TokenList = ({
       data={tokens}
       estimatedItemSize={50}
       renderItem={renderItem}
-      // keyExtractor={(_, index) => index.toString()}
-      // keyExtractor={(item) => item.address}
+      keyExtractor={(_, index) => index.toString()}
       ListFooterComponent={
         <TokenListFooter
           tokens={tokens}
