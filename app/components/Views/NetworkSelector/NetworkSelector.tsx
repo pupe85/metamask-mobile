@@ -96,6 +96,7 @@ import { store } from '../../../store';
 import ReusableModal, { ReusableModalRef } from '../../UI/ReusableModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Device from '../../../util/device';
+import { debounce } from 'lodash';
 
 interface infuraNetwork {
   name: string;
@@ -285,7 +286,14 @@ const NetworkSelector = () => {
         );
       } else {
         const { networkClientId } = rpcEndpoints[defaultRpcEndpointIndex];
-        NetworkController.setActiveNetwork(networkClientId);
+        try {
+          const debouncedSetActiveNetwork = debounce(async (id: string) => {
+            await NetworkController.setActiveNetwork(id);
+          }, 300);
+          debouncedSetActiveNetwork(networkClientId as string);
+        } catch (error) {
+          Logger.error(new Error(`Error in setActiveNetwork: ${error}`));
+        }
         sheetRef.current?.dismissModal();
       }
 
@@ -386,8 +394,12 @@ const NetworkSelector = () => {
     Linking.openURL(strings('networks.learn_more_url'));
   };
 
+  const delay = (ms: number) => {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  };
+
   // The only possible value types are mainnet, linea-mainnet, sepolia and linea-sepolia
-  const onNetworkChange = (type: InfuraNetworkType) => {
+  const onNetworkChange = async (type: InfuraNetworkType) => {
     trace({
       name: TraceName.SwitchBuiltInNetwork,
       parentContext: parentSpan,
@@ -402,19 +414,50 @@ const NetworkSelector = () => {
     if (domainIsConnectedDapp && process.env.MULTICHAIN_V1) {
       SelectedNetworkController.setNetworkClientIdForDomain(origin, type);
     } else {
-      const networkConfiguration =
-        networkConfigurations[BUILT_IN_NETWORKS[type].chainId];
+      try {
+        const networkConfiguration =
+          networkConfigurations[BUILT_IN_NETWORKS[type].chainId];
 
-      const clientId =
-        networkConfiguration?.rpcEndpoints[
-          networkConfiguration.defaultRpcEndpointIndex
-        ].networkClientId ?? type;
+        const clientId =
+          networkConfiguration?.rpcEndpoints[
+            networkConfiguration.defaultRpcEndpointIndex
+          ].networkClientId ?? type;
 
-      setTokenNetworkFilter(networkConfiguration.chainId);
-      NetworkController.setActiveNetwork(clientId);
-      closeRpcModal();
-      AccountTrackerController.refresh();
-      updateIncomingTransactions([networkConfiguration.chainId]);
+        closeRpcModal();
+
+        setTokenNetworkFilter(networkConfiguration.chainId);
+
+        const debouncedSetActiveNetwork = debounce(async (id: string) => {
+          try {
+            await NetworkController.setActiveNetwork(id);
+          } catch (error) {
+            Logger.error(new Error(`Error in setActiveNetwork: ${error}`));
+          }
+        }, 300);
+        debouncedSetActiveNetwork(clientId as string);
+
+        const debouncedRefresh = debounce(() => {
+          try {
+            AccountTrackerController.refresh();
+          } catch (error) {
+            Logger.error(new Error(`Error in refresh: ${error}`));
+          }
+        }, 1000);
+        debouncedRefresh();
+
+        const debouncedUpdateIncomingTransactions = debounce(() => {
+          try {
+            updateIncomingTransactions([networkConfiguration.chainId]);
+          } catch (error) {
+            Logger.error(
+              new Error(`Error in updateIncomingTransactions: ${error}`),
+            );
+          }
+        }, 1000);
+        debouncedUpdateIncomingTransactions();
+      } catch (error) {
+        Logger.error(new Error(`Error in main block: ${error}`));
+      }
     }
 
     sheetRef.current?.dismissModal();
